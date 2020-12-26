@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <title>TEST WEB WORKERS</title>
+    </head>
+    <body>
+        <h3>Threads:</h3>
+        <input id="threads_input" value="16" />
+        <h3>Worker:</h3>
+        <input id="input" value="web.js" />
+
+        <button id="run">Run</button>
+        <h1 id="output">Ready!</h1>
+        <script>
+            const input = document.getElementById("input"),
+                threads_input = document.getElementById("threads_input"),
+                run = document.getElementById("run"),
+                output = document.getElementById("output");
+
+            const runWorker = (path) => {
+                return new Promise((resolve) => {
+                    console.log("START");
+
+                    const worker = new Worker(path);
+                    worker.addEventListener("message", (result) => {
+                        console.log("END");
+                        worker.terminate();
+                        resolve(result.data);
+                    });
+                    worker.postMessage("I am frontend!");
+                });
+            };
+
+            run.onclick = () => {
+                const name = input.value,
+                    threads = +threads_input.value;
+                output.innerText = "In process...";
+
+                const start = Date.now();
+
+                const workers = [];
+                for (let i = 0; i < threads; i++) {
+                    workers.push(runWorker("/workers/" + name));
+                }
+
+                Promise.all(workers).then((results) => {
+                    console.log("ALL FINISHED!");
+
+                    const time = (Date.now() - start) / 1000;
+                    output.innerText = results + ", Time: " + time + " s";
+                });
+            };
+        </script>
+    </body>
+</html>
